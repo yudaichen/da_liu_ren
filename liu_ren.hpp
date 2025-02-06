@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 #include <codecvt>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <format>
 #include <iomanip>
 #include <iostream>
@@ -13,8 +15,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
 
 using namespace std;
 
@@ -114,7 +114,8 @@ public:
     fmt::print("地盘信息: ");
     for (const auto &branch : earthPlate) {
       // 转换为 std::string
-      std::string branchNameStr(branchName.at(branch).begin(), branchName.at(branch).end());
+      std::string branchNameStr(branchName.at(branch).begin(),
+                                branchName.at(branch).end());
       fmt::print("{}", branchNameStr);
       if (&branch != &earthPlate.back()) {
         fmt::print(" ");
@@ -126,7 +127,8 @@ public:
     fmt::print("天盘信息: ");
     for (const auto &branch : heavenPlate) {
       // 转换为 std::string
-      std::string branchNameStr(branchName.at(branch).begin(), branchName.at(branch).end());
+      std::string branchNameStr(branchName.at(branch).begin(),
+                                branchName.at(branch).end());
       fmt::print("{}", branchNameStr);
       if (&branch != &heavenPlate.back()) {
         fmt::print(" ");
@@ -138,7 +140,8 @@ public:
     fmt::print("神煞表信息:\n");
     for (const auto &[branch, shaList] : shenShaTable) {
       // 转换为 std::string
-      std::string branchNameStr(branchName.at(branch).begin(), branchName.at(branch).end());
+      std::string branchNameStr(branchName.at(branch).begin(),
+                                branchName.at(branch).end());
       fmt::print("地支: {} 神煞: ", branchNameStr);
       fmt::print("{}", fmt::join(shaList, " "));
       fmt::print("\n");
@@ -303,9 +306,10 @@ inline int test01() {
     throw; // 重新抛出异常，或者进行其他错误处理
   }
 
-  EarthlyBranch timePeriod =
-      static_cast<EarthlyBranch>((hour + 1) / 2 % 12); // 时辰计算
-  EarthlyBranch currentHour = timePeriod;              // 当前时辰用于判断昼夜
+  // 时辰计算
+  EarthlyBranch timePeriod = static_cast<EarthlyBranch>((hour + 1) / 2 % 12);
+  // 当前时辰用于判断昼夜
+  EarthlyBranch currentHour = timePeriod;
 
   // ---- Step 3: 确定贵人 ----
   bool isDay = isDaytime(currentHour);
@@ -361,16 +365,35 @@ inline int test01() {
   ThreeTransmissions threeTransmissions(heavenEarthPlate, fourLessonsObj);
 
   // 输出初传地支编号
-  std::cout << std::format("初传: {}\n", std::string(branchName[threeTransmissions.getInitial()].begin(), branchName[threeTransmissions.getInitial()].end())) << std::endl; // Convert to std::string for formatting
+  std::cout << std::format(
+                   "初传: {}\n",
+                   std::string(
+                       branchName[threeTransmissions.getInitial()].begin(),
+                       branchName[threeTransmissions.getInitial()].end()))
+            << std::endl;
+
   // 输出中传地支编号
-  std::cout << std::format("中传: {}\n", std::string(branchName[threeTransmissions.getMiddle()].begin(), branchName[threeTransmissions.getMiddle()].end())) << std::endl; // Convert to std::string for formatting
+  std::cout << std::format(
+                   "中传: {}\n",
+                   std::string(
+                       branchName[threeTransmissions.getMiddle()].begin(),
+                       branchName[threeTransmissions.getMiddle()].end()))
+            << std::endl;
+
   // 输出末传地支编号
-  std::cout << std::format("末传: {}\n", std::string(branchName[threeTransmissions.getFinalTransmission()].begin(), branchName[threeTransmissions.getFinalTransmission()].end())) << std::endl; // Convert to std::string for formatting
+  std::cout
+      << std::format(
+             "末传: {}\n",
+             std::string(
+                 branchName[threeTransmissions.getFinalTransmission()].begin(),
+                 branchName[threeTransmissions.getFinalTransmission()].end()))
+      << std::endl;
+
   // 输出三传的格局类型
   for (const auto &p : threeTransmissions.getPattern()) {
-    std::cout << std::format("格局: {}\n", std::string(p.begin(), p.end())) << std::endl; // Convert to std::string for formatting
+    std::cout << std::format("格局: {}\n", std::string(p.begin(), p.end()))
+              << std::endl; // Convert to std::string for formatting
   }
-
 
   heavenEarthPlate.printPlateInfo();
 
