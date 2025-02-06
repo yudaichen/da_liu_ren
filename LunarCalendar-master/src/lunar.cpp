@@ -321,8 +321,8 @@ LunarObj* Lunar::solar2lunar( int32_t year, int32_t month, int32_t day )
         i--;
     }
     
-#warning TODO: 是否是今天
-#warning TODO: 星期几
+//#warning TODO: 是否是今天
+//#warning TODO: 星期几
     
     int32_t lunarYear = i;
     leap = this->leapMonth( i );

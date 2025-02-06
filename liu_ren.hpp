@@ -13,9 +13,10 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 using namespace std;
-
 
 // 干支类，用于表示一个干支组合
 class StemBranch {
@@ -70,12 +71,15 @@ public:
 // 天地盘类，包含地盘、天盘、十二神将、十二宫位对应的神煞列表和天将盘信息
 class HeavenEarthPlate {
 public:
-  std::vector<EarthlyBranch> earthPlate; // 地盘地支数组
-  std::vector<EarthlyBranch> heavenPlate; // 天盘地支数组
+  std::vector<EarthlyBranch> earthPlate;     // 地盘地支数组
+  std::vector<EarthlyBranch> heavenPlate;    // 天盘地支数组
   std::vector<EarthlyBranch> divineGenerals; // 十二神将位置
   std::map<EarthlyBranch, std::vector<std::string>> shenShaTable; // 神煞表
 
-  HeavenEarthPlate(const std::vector<EarthlyBranch> &ep, const std::vector<EarthlyBranch> &hp, const std::vector<EarthlyBranch> &dg, HeavenlyStem stem, bool isDay, const LunarObj *obj)
+  HeavenEarthPlate(const std::vector<EarthlyBranch> &ep,
+                   const std::vector<EarthlyBranch> &hp,
+                   const std::vector<EarthlyBranch> &dg, HeavenlyStem stem,
+                   bool isDay, const LunarObj *obj)
       : earthPlate(ep), heavenPlate(hp), divineGenerals(dg) {
     // 获取贵人所在地支
     auto &noblePair = nobleTable[stem];
@@ -106,25 +110,38 @@ public:
   // 格式化输出天、地盘12宫的信息，以及十二神将位置和神煞表
   void printPlateInfo() const {
 
-    std::cout << "地盘信息: ";
-    for (const auto& branch : earthPlate) {
-      std::cout << reinterpret_cast<const char*>(branchName.at(branch).c_str()) << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "天盘信息: ";
-    for (const auto& branch : heavenPlate) {
-      std::cout << reinterpret_cast<const char*>(branchName.at(branch).c_str()) << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "神煞表信息:" << std::endl;
-    for (const auto& [branch, shaList] : shenShaTable) {
-      std::cout << "地支: " << reinterpret_cast<const char*>(branchName.at(branch).c_str()) << " 神煞: ";
-      for (const auto& sha : shaList) {
-        std::cout << sha << " ";
+    // 输出地盘信息
+    fmt::print("地盘信息: ");
+    for (const auto &branch : earthPlate) {
+      // 转换为 std::string
+      std::string branchNameStr(branchName.at(branch).begin(), branchName.at(branch).end());
+      fmt::print("{}", branchNameStr);
+      if (&branch != &earthPlate.back()) {
+        fmt::print(" ");
       }
-      std::cout << std::endl;
+    }
+    fmt::print("\n");
+
+    // 输出天盘信息
+    fmt::print("天盘信息: ");
+    for (const auto &branch : heavenPlate) {
+      // 转换为 std::string
+      std::string branchNameStr(branchName.at(branch).begin(), branchName.at(branch).end());
+      fmt::print("{}", branchNameStr);
+      if (&branch != &heavenPlate.back()) {
+        fmt::print(" ");
+      }
+    }
+    fmt::print("\n");
+
+    // 输出神煞表信息
+    fmt::print("神煞表信息:\n");
+    for (const auto &[branch, shaList] : shenShaTable) {
+      // 转换为 std::string
+      std::string branchNameStr(branchName.at(branch).begin(), branchName.at(branch).end());
+      fmt::print("地支: {} 神煞: ", branchNameStr);
+      fmt::print("{}", fmt::join(shaList, " "));
+      fmt::print("\n");
     }
   }
 
@@ -139,12 +156,11 @@ private:
     currentYearStem = stemMap[yearStr];
     currentYearBranch = branchMap[ganzhiYear.substr(3, 5)];
   }
-
 };
 
-
 // 排列十二神将
-inline std::vector<EarthlyBranch> arrangeDivineGenerals(EarthlyBranch nobleBranch, bool isClockwise) {
+inline std::vector<EarthlyBranch>
+arrangeDivineGenerals(EarthlyBranch nobleBranch, bool isClockwise) {
   std::vector<EarthlyBranch> divineGeneralPositions(12);
   int nobleIndex = static_cast<int>(nobleBranch);
   int step = isClockwise ? 1 : -1;
@@ -156,16 +172,17 @@ inline std::vector<EarthlyBranch> arrangeDivineGenerals(EarthlyBranch nobleBranc
 }
 
 // 排列天盘
-inline std::vector<EarthlyBranch> arrangeHeavenPlate(EarthlyBranch moonGeneral) {
+inline std::vector<EarthlyBranch>
+arrangeHeavenPlate(EarthlyBranch moonGeneral) {
   std::vector<EarthlyBranch> heavenPlateData(12);
   EarthlyBranch current = moonGeneral;
   for (int i = 0; i < 12; ++i) {
     heavenPlateData[i] = current;
-    current = static_cast<EarthlyBranch>((static_cast<int>(current) + 1) % 12); // 顺时针排列
+    current = static_cast<EarthlyBranch>((static_cast<int>(current) + 1) %
+                                         12); // 顺时针排列
   }
   return heavenPlateData;
 }
-
 
 // 三传类，用于计算和表示三传信息
 class ThreeTransmissions {
@@ -248,40 +265,60 @@ public:
 inline int test01() {
   // ---- 输入参数 ----
   int year, month, day, hour;
-  std::cout << "请输入阳历日期（年 月 日 时）：";
+  std::println(std::cout, "请输入阳历日期（年 月 日 时）：");
   std::cin >> year >> month >> day >> hour;
 
   // ---- Step 1: 使用农历库获取农历信息 ----
   Lunar lunar;
   LunarObj *obj = lunar.solar2lunar(year, month, day);
 
-  std::cout << "农历日期：" << obj->lunarYear << "年" << obj->lunarMonthChineseName
-            << obj->lunarDayChineseName << "\n";
-  std::cout << "生肖：" << obj->animal << "\n";
-  std::cout << "干支年：" << obj->ganzhiYear << "\n";
-  std::cout << "干支月：" << obj->ganzhiMonth << "\n";
-  std::cout << "干支日：" << obj->ganzhiDay << "\n";
-  std::cout << "节气：" << obj->term << "\n";
+  std::println(std::cout, "农历日期：{}年{}{}\n", obj->lunarYear,
+               obj->lunarMonthChineseName, obj->lunarDayChineseName);
+  std::println(std::cout, "生肖：{}\n", obj->animal);
+  std::println(std::cout, "干支年：{}\n", obj->ganzhiYear);
+  std::println(std::cout, "干支月：{}\n", obj->ganzhiMonth);
+  std::println(std::cout, "干支日：{}\n", obj->ganzhiDay);
+  std::println(std::cout, "节气：{}\n", obj->term);
 
-  // ---- Step 2: 提取日干和日支 ----
-  std::u8string ganzhiDay(obj->ganzhiDay.begin(), obj->ganzhiDay.end());
-  std::u8string str = ganzhiDay.substr(0, 3);
-  HeavenlyStem dayStem = stemMap[str];//日干
-  EarthlyBranch dayBranch = branchMap[ganzhiDay.substr(3, 5)];//日支
+  // ---- Step 2: 更优雅地提取日干和日支 ----
+  std::u8string ganzhiDayU8 =
+      std::u8string(obj->ganzhiDay.begin(), obj->ganzhiDay.end());
 
-  EarthlyBranch timePeriod = static_cast<EarthlyBranch>((hour + 1) / 2 % 12); // 时辰计算
-  EarthlyBranch currentHour = timePeriod; // 当前时辰用于判断昼夜
+  if (ganzhiDayU8.length() != 6) { // 假设每个汉字UTF-8编码为3字节，总共6字节
+    throw std::runtime_error(
+        "干支日字符串长度异常，预期为两个汉字 (6字节 UTF-8)");
+  }
+
+  std::u8string stemU8Str = ganzhiDayU8.substr(0, 3);   // 截取前3个字节作为干
+  std::u8string branchU8Str = ganzhiDayU8.substr(3, 3); // 截取后3个字节作为支
+
+  HeavenlyStem dayStem;
+  EarthlyBranch dayBranch;
+
+  try {
+    dayStem = stemMap.at(stemU8Str);       // 日干
+    dayBranch = branchMap.at(branchU8Str); // 日支
+  } catch (const std::out_of_range &e) {
+    std::println(std::cerr, "Error: 干支字符无法识别: {}\n", e.what());
+    throw; // 重新抛出异常，或者进行其他错误处理
+  }
+
+  EarthlyBranch timePeriod =
+      static_cast<EarthlyBranch>((hour + 1) / 2 % 12); // 时辰计算
+  EarthlyBranch currentHour = timePeriod;              // 当前时辰用于判断昼夜
 
   // ---- Step 3: 确定贵人 ----
   bool isDay = isDaytime(currentHour);
 
   // ---- Step 4: 排列十二神将 ----
   EarthlyBranch nobleBranch = getNoble(dayStem, isDay);
-  bool isClockwise = (nobleBranch == EarthlyBranch::Hai) ||
-                     (static_cast<int>(nobleBranch) >= static_cast<int>(EarthlyBranch::Zi) &&
-                      static_cast<int>(nobleBranch) <= static_cast<int>(EarthlyBranch::Chen));
+  bool isClockwise =
+      (nobleBranch == EarthlyBranch::Hai) ||
+      (static_cast<int>(nobleBranch) >= static_cast<int>(EarthlyBranch::Zi) &&
+       static_cast<int>(nobleBranch) <= static_cast<int>(EarthlyBranch::Chen));
 
-  std::vector<EarthlyBranch> divineGeneralPositions = arrangeDivineGenerals(nobleBranch, isClockwise);
+  std::vector<EarthlyBranch> divineGeneralPositions =
+      arrangeDivineGenerals(nobleBranch, isClockwise);
 
   // ---- Step 5: 获取月将 ----
   EarthlyBranch moonGeneral = getMoonGeneral(obj);
@@ -290,7 +327,9 @@ inline int test01() {
   std::vector<EarthlyBranch> heavenPlateData = arrangeHeavenPlate(moonGeneral);
 
   // ---- Step 7: 创建天地盘对象 ----
-  HeavenEarthPlate heavenEarthPlate(earthPlateData, heavenPlateData, divineGeneralPositions, dayStem, isDay, obj);
+  HeavenEarthPlate heavenEarthPlate(earthPlateData, heavenPlateData,
+                                    divineGeneralPositions, dayStem, isDay,
+                                    obj);
 
   // ---- Step 8: 计算四课 ----
   // 第一课：干上神
@@ -315,19 +354,23 @@ inline int test01() {
   EarthlyBranch branchYangGodBranch = thirdLessonUpperGod;
 
   // 创建四课对象
-  FourLessons fourLessonsObj(firstLesson, secondLesson, thirdLesson, fourthLesson, stemYangGodBranch, branchYangGodBranch);
+  FourLessons fourLessonsObj(firstLesson, secondLesson, thirdLesson,
+                             fourthLesson, stemYangGodBranch,
+                             branchYangGodBranch);
   // 创建三传对象
   ThreeTransmissions threeTransmissions(heavenEarthPlate, fourLessonsObj);
+
   // 输出初传地支编号
-  std::cout << "初传: " << reinterpret_cast<const char*>(branchName[threeTransmissions.getInitial()].c_str()) << std::endl;
+  std::cout << std::format("初传: {}\n", std::string(branchName[threeTransmissions.getInitial()].begin(), branchName[threeTransmissions.getInitial()].end())) << std::endl; // Convert to std::string for formatting
   // 输出中传地支编号
-  std::cout << "中传: " << reinterpret_cast<const char*>(branchName[threeTransmissions.getMiddle()].c_str()) << std::endl;
+  std::cout << std::format("中传: {}\n", std::string(branchName[threeTransmissions.getMiddle()].begin(), branchName[threeTransmissions.getMiddle()].end())) << std::endl; // Convert to std::string for formatting
   // 输出末传地支编号
-  std::cout << "末传: " << reinterpret_cast<const char*>(branchName[threeTransmissions.getFinalTransmission()].c_str()) << std::endl;
+  std::cout << std::format("末传: {}\n", std::string(branchName[threeTransmissions.getFinalTransmission()].begin(), branchName[threeTransmissions.getFinalTransmission()].end())) << std::endl; // Convert to std::string for formatting
   // 输出三传的格局类型
   for (const auto &p : threeTransmissions.getPattern()) {
-    std::cout << "格局: " << reinterpret_cast<const char*>(p.c_str()) << std::endl;
+    std::cout << std::format("格局: {}\n", std::string(p.begin(), p.end())) << std::endl; // Convert to std::string for formatting
   }
+
 
   heavenEarthPlate.printPlateInfo();
 
